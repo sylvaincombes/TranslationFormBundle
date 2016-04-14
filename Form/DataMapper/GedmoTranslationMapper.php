@@ -2,9 +2,9 @@
 
 namespace A2lix\TranslationFormBundle\Form\DataMapper;
 
-use Symfony\Component\Form\DataMapperInterface,
-    Symfony\Component\Form\Exception\UnexpectedTypeException,
-    Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Form\DataMapperInterface;
+use Symfony\Component\Form\Exception\UnexpectedTypeException;
 
 /**
  * @author David ALLIX
@@ -25,12 +25,16 @@ class GedmoTranslationMapper implements DataMapperInterface
         }
 
         foreach ($forms as $translationsFieldsForm) {
-            $locale = $translationsFieldsForm->getConfig()->getName();
+            $translationsFieldsConfig = $translationsFieldsForm->getConfig();
+            $locale = $translationsFieldsConfig->getName();
+            $fields = $translationsFieldsConfig->getOption('fields');
 
             $tmpFormData = array();
             foreach ($data as $translation) {
                 if ($locale === $translation->getLocale()) {
-                    $tmpFormData[$translation->getField()] = $translation->getContent();
+                    if (array_key_exists($translation->getField(), $fields)) {
+                        $tmpFormData[$translation->getField()] = $translation->getContent();
+                    }
                 }
             }
             $translationsFieldsForm->setData($tmpFormData);
@@ -56,22 +60,28 @@ class GedmoTranslationMapper implements DataMapperInterface
             $translationsFieldsConfig = $translationsFieldsForm->getConfig();
             $locale = $translationsFieldsConfig->getName();
             $translationClass = $translationsFieldsConfig->getOption('translation_class');
+            $fields = $translationsFieldsConfig->getOption('fields');
 
             foreach ($translationsFieldsForm->getData() as $field => $content) {
-                $existingTranslation = $data ? $data->filter(function($object) use ($locale, $field) {
-                    return ($object && ($object->getLocale() === $locale) && ($object->getField() === $field));
-                })->first() : null;
+                if (array_key_exists($field, $fields)) {
 
-                if ($existingTranslation) {
-                    $existingTranslation->setContent($content);
-                    $newData->add($existingTranslation);
+                    $existingTranslation = $data ? $data->filter(
+                        function ($object) use ($locale, $field) {
+                            return ($object && ($object->getLocale() === $locale) && ($object->getField() === $field));
+                        }
+                    )->first() : null;
 
-                } else {
-                    $translation = new $translationClass();
-                    $translation->setLocale($locale);
-                    $translation->setField($field);
-                    $translation->setContent($content);
-                    $newData->add($translation);
+                    if ($existingTranslation) {
+                        $existingTranslation->setContent($content);
+                        $newData->add($existingTranslation);
+
+                    } else {
+                        $translation = new $translationClass();
+                        $translation->setLocale($locale);
+                        $translation->setField($field);
+                        $translation->setContent($content);
+                        $newData->add($translation);
+                    }
                 }
             }
         }
