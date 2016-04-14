@@ -82,6 +82,7 @@ class GedmoTranslationsType extends AbstractType
             'required' => $this->required,
             'locales' => $this->locales,
             'fields' => array(),
+            'exclude_fields' => array(),
             'translatable_class' => null,
 
             // inherit_data is needed only if there is no persist of default locale and default locale is required to display

@@ -45,6 +45,7 @@ class TranslationsType extends AbstractType
             'required' => $this->required,
             'locales' => $this->locales,
             'fields' => array(),
+            'exclude_fields' => array(),
         ));
     }
 

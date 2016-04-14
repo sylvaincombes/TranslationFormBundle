@@ -46,27 +46,31 @@ abstract class TranslationForm implements TranslationFormInterface
 
         // Custom options by field
         foreach (array_unique(array_merge(array_keys($options['fields']), $this->getTranslatableFields($class))) as $child) {
-            $childOptions = (isset($options['fields'][$child]) ? $options['fields'][$child] : array()) + array('required' => $options['required']);
+            if(!in_array($child, $options['exclude_fields'])) {
+                $childOptions = (isset($options['fields'][$child]) ? $options['fields'][$child] :
+                        array()) + array('required' => $options['required']);
 
-            if (!isset($childOptions['display']) || $childOptions['display']) {
-                $childOptions = $this->guessMissingChildOptions($this->typeGuesser, $class, $child, $childOptions);
+                if (!isset($childOptions['display']) || $childOptions['display']) {
+                    $childOptions = $this->guessMissingChildOptions($this->typeGuesser, $class, $child, $childOptions);
 
-                // Custom options by locale
-                if (isset($childOptions['locale_options'])) {
-                    $localesChildOptions = $childOptions['locale_options'];
-                    unset($childOptions['locale_options']);
+                    // Custom options by locale
+                    if (isset($childOptions['locale_options'])) {
+                        $localesChildOptions = $childOptions['locale_options'];
+                        unset($childOptions['locale_options']);
 
-                    foreach ($options['locales'] as $locale) {
-                        $localeChildOptions = isset($localesChildOptions[$locale]) ? $localesChildOptions[$locale] : array();
-                        if (!isset($localeChildOptions['display']) || $localeChildOptions['display']) {
-                            $childrenOptions[$locale][$child] = $localeChildOptions + $childOptions;
+                        foreach ($options['locales'] as $locale) {
+                            $localeChildOptions = isset($localesChildOptions[$locale]) ? $localesChildOptions[$locale] :
+                                array();
+                            if (!isset($localeChildOptions['display']) || $localeChildOptions['display']) {
+                                $childrenOptions[$locale][$child] = $localeChildOptions + $childOptions;
+                            }
                         }
-                    }
 
-                // General options for all locales
-                } else {
-                    foreach ($options['locales'] as $locale) {
-                        $childrenOptions[$locale][$child] = $childOptions;
+                        // General options for all locales
+                    } else {
+                        foreach ($options['locales'] as $locale) {
+                            $childrenOptions[$locale][$child] = $childOptions;
+                        }
                     }
                 }
             }
